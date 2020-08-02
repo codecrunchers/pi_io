@@ -4,15 +4,15 @@ use clap::{Arg, App, SubCommand};
 
 fn main() {
 
+    let mut button = Button::new(17);
     ctrlc::set_handler(move || {
         println!("received Ctrl+C!");
         std::process::exit(0);
     })
     .expect("Error setting Ctrl-C handler");
 
-    let mut button = Button::new_with_pulldown(17);
 
-/*    let matches = App::new("Rusty Cam")
+    let matches = App::new("Rusty Cam")
         .version("1.0")
         .author("Alan R. <alan@alanryan.namegmail.com>")  .version("1.0")
         .about("Will Invoke WPS Script")
@@ -25,10 +25,9 @@ fn main() {
         .get_matches();
 
     let config = matches.value_of("script").unwrap_or("/opt/wps/wps-config.sh");
-    println!("Using {} as WPS Script", config);*/
+    println!("Using {} as WPS Script", config);
 
-    let config = "/opt/wps/wps-config.sh";
-    while true {
+    loop {
         button.wait_for_press(None);
         println!("WPS button was pressed, running {}", config);
 
