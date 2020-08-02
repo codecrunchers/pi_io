@@ -10,7 +10,7 @@ fn main() {
     })
     .expect("Error setting Ctrl-C handler");
 
-    let mut led = LED::new(17);
+    let mut led = LED::new(18);
     while true {
 
         if network_available() {
