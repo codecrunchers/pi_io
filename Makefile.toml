@@ -1,0 +1,13 @@
+[tasks.buildx86]
+description = "Runs the rust compiler."
+category = "Build"
+command = "cargo"
+args = ["build", "--all-features"]
+
+
+[tasks.buildpi]
+description = "Cross build "
+category = "Build"
+command = "cross"
+args = ["build", "--target=armv7-unknown-linux-gnueabihf", "--release"]
+
