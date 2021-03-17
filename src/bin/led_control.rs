@@ -5,9 +5,12 @@ use clap::{App, Arg};
 use std::time::Duration;
 
 static STATUS_CHECK_INTERVAL: u64 = 10000;
+static BLINK_COUNT: i32 = 10;
 
 fn main() {
+    let old_net_status: bool = false;
     let mut led = LED::new(18);
+    led.set_blink_count(BLINK_COUNT);
 
     ctrlc::set_handler(move || {
         println!("Received Ctrl+C!");
@@ -73,18 +76,16 @@ fn main() {
     );
 
     loop {
-        if network_available(carrier) {
-            led.blink(
-                connected_flash_interval as f32,
-                disconnected_flash_interval as f32,
-            );
-        } else {
-            led.blink(
-                disconnected_flash_interval as f32,
-                connected_flash_interval as f32,
-            );
+        let net_status = network_available(carrier);
+
+        if net_status != old_net_status {
+            println!("Status Changed, now {} was {}", net_status, old_net_status);
+            if net_status {
+                led.blink(1.0, disconnected_flash_interval as f32);
+            } else {
+                led.blink(1.0, connected_flash_interval as f32);
+            }
         }
-        std::thread::sleep(Duration::from_millis(STATUS_CHECK_INTERVAL));
     }
 }
 
@@ -94,11 +95,7 @@ fn main() {
  */
 fn network_available(carrier: &str) -> bool {
     match std::process::Command::new("cat").arg(carrier).output() {
-        Ok(s) => {
-            let val = String::from_utf8(s.stdout).unwrap();
-            println!("File Value {}", val);
-            val == "1"
-        }
+        Ok(s) => s.stdout.len() > 0 && s.stdout[0] == 49,
 
         Err(e) => {
             println!("Error Reading Wlan Status file: {:?}", e);
@@ -115,12 +112,7 @@ mod tests {
     #[test]
     fn test_network_available() -> std::result::Result<(), std::io::Error> {
         assert_eq!(false, network_available("/dev/null"));
-        let file = std::fs::write("/tmp/foo", "1").expect("Unable to write file");
-        let mut contents = String::new();
-        let mut carrier_file = std::fs::File::open("/tmp/foo")?;
-        carrier_file.read_to_string(&mut contents);
-        println!("Contents {}", contents.clone());
-        assert_eq!(true, network_available("/tmp/foo"));
+        assert_eq!(true, network_available("/sys/class/net/lo/carrier"));
         Ok(())
     }
 }
